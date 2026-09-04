@@ -23,6 +23,13 @@
 </header>
 
 <main class="layout">
+
+<section id="alertBox" class="alert-box" style="display:none;">
+  <strong>⚠️ Early Warning Alert</strong>
+  <p id="alertMessage">No active warnings.</p>
+</section>
+
+<section class="hero card">
 <section class="hero card">
   <div>
     <span class="pill">SOFTWARE-ONLY EARLY WARNING</span>
@@ -33,7 +40,11 @@
 </section>
 
 <section class="stats">
-  <article class="stat card"><span>Current rainfall</span><strong id="rainNow">—</strong><small>mm/h</small></article>
+  ss="stat car<article class="stat card">
+  <span>Current rainfall</span>
+  <strong id="rainNow">—</strong>
+  <small id="rainStatus">mm/h</small>
+</article>
   <article class="stat card"><span>Next 24h rain</span><strong id="rain24">—</strong><small>mm</small></article>
   <article class="stat card"><span>Risk level</span><strong id="level">—</strong><small id="score">Score —</small></article>
   <article class="stat card"><span>Offline reports</span><strong id="queue">0</strong><small>waiting to sync</small></article>
