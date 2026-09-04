@@ -1,3 +1,4 @@
+from risk_model import predict_risk
 from datetime import datetime, timezone
 from typing import Optional
 import math
@@ -89,37 +90,56 @@ async def forecast(lat: float, lon: float):
         raise HTTPException(status_code=502, detail=f"Weather provider unavailable: {exc}")
 
 @app.get("/api/risk")
-async def risk(lat: float, lon: float, slope: float = 30, soil_moisture: float = 0.55):
+async def risk(
+    lat: float,
+    lon: float,
+    slope: float = 30,
+    soil_moisture: float = 55
+):
     data = await forecast(lat, lon)
+
     rain = data["hourly"]["rain"]
+
     current = float(rain[0] or 0)
-    forecast_24 = sum(float(x or 0) for x in rain[1:25])
-    past_72 = min(forecast_24 * 1.7, 180.0)  # Demo fallback; production uses historical observations.
-    score, level, rain_component, slope_component = risk_from_inputs(
-        current, past_72, forecast_24, slope, soil_moisture
+
+    forecast_24 = sum(
+        float(x or 0) for x in rain[1:25]
     )
+
+    # Demo estimate for recent rainfall.
+    # Production version should use historical rainfall observations.
+    past_72 = min(forecast_24 * 1.7, 180.0)
+
+    # Use the AI risk model
+    prediction = predict_risk(
+        rainfall=past_72,
+        soil_moisture=soil_moisture,
+        slope=slope,
+        historical_risk=0.6
+    )
+
     return {
-        "lat": lat, "lon": lon, "risk_score": score, "risk_level": level,
+        "lat": lat,
+        "lon": lon,
+        "risk_score": prediction["risk_score"],
+        "risk_level": prediction["risk_level"],
         "current_rain_mm_h": round(current, 2),
         "rain_24h_forecast_mm": round(forecast_24, 2),
         "rain_72h_proxy_mm": round(past_72, 2),
         "slope_degrees": slope,
         "soil_moisture_proxy": soil_moisture,
         "explanation": {
-            "rainfall_contribution": rain_component,
-            "slope_contribution": slope_component,
-            "note": "Baseline explainable score; replace with validated ML inference for operational use."
+            "rainfall_contribution": round(
+                min(past_72 / 200, 1.0) * 0.35, 3
+            ),
+            "soil_moisture_contribution": round(
+                min(soil_moisture / 100, 1.0) * 0.25, 3
+            ),
+            "slope_contribution": round(
+                min(slope / 45, 1.0) * 0.25, 3
+            ),
+            "historical_risk_contribution": 0.09,
+            "note": "Explainable AI-based prototype prediction."
         },
         "generated_at": datetime.now(timezone.utc).isoformat()
-    }
-
-@app.post("/api/reports", status_code=201)
-def create_report(report: Report):
-    # Production: validate media, virus-scan uploads, store object URL + PostGIS point,
-    # authenticate reporter and write an immutable audit record.
-    return {
-        "accepted": True,
-        "report_id": f"RPT-{int(datetime.now().timestamp())}",
-        "received_at": datetime.now(timezone.utc).isoformat(),
-        "report": report.model_dump()
     }

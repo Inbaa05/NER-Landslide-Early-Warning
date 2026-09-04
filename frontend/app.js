@@ -1,4 +1,4 @@
-const API_BASE = localStorage.getItem("apiBase") || "http://localhost:8000";
+const API_BASE = localStorage.getItem("apiBase") || "https://ner-landslide-early-warning-api.onrender.com";
 const map = L.map("map").setView([25.6, 92.2], 6);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:"© OpenStreetMap contributors"}).addTo(map);
 
