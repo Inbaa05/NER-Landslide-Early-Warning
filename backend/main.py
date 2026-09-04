@@ -81,13 +81,26 @@ async def forecast(lat: float, lon: float):
         "&hourly=precipitation,rain,precipitation_probability,relative_humidity_2m"
         "&forecast_days=7&timezone=auto"
     )
+
     try:
         async with httpx.AsyncClient(timeout=10) as client:
             r = await client.get(url)
             r.raise_for_status()
             return r.json()
+
     except Exception as exc:
-        raise HTTPException(status_code=502, detail=f"Weather provider unavailable: {exc}")
+        print(f"Weather provider unavailable: {exc}")
+
+        # Demo fallback data when the weather API is unavailable
+        return {
+            "hourly": {
+                "rain": [0.5] * 169,
+                "precipitation": [0.5] * 169,
+                "precipitation_probability": [30] * 169,
+                "relative_humidity_2m": [70] * 169
+            },
+            "fallback": True
+        }    
 
 @app.get("/api/risk")
 async def risk(
